@@ -1,0 +1,42 @@
+# Install package for first run
+# install.packages("stringr")
+# install.packages("tidyr")
+# install.packages("dplyr")
+# install.packages("zoo")
+# install.packages("Metrics")
+# install.packages("caret")
+# install.packages("MASS")
+# install.packages("ggplot2")
+# install.packages("reshape2")
+# install.packages("mltools")
+# install.packages("DescTools")
+# install.packages("plotly")
+
+# Load packages
+library(stringr)
+library(tidyr)
+library(dplyr)
+library(zoo)
+library(Metrics)
+library(caret)
+library(MASS)
+library(ggplot2)
+library(reshape2)
+library(mltools)
+library(DescTools)
+library(plotly)
+
+# Read datas
+GPU = read.csv("./gpus.csv", header = TRUE, na.strings = c("N/A"))
+GPU_analyze = GPU[,c("Architecture","Core_Speed","DVI_Connection"
+                     ,"Dedicated","Direct_X","HDMI_Connection"
+                     ,"Integrated","L2_Cache","Manufacturer"
+                     ,"Max_Power","Memory","Memory_Bandwidth"
+                     ,"Memory_Bus","Memory_Speed","Memory_Type"
+                     ,"Name","Notebook_GPU","Open_GL","PSU"
+                     ,"Pixel_Rate","Power_Connector","Process"
+                     ,"ROPs","Release_Date","Resolution_WxH"
+                     ,"SLI_Crossfire","Shader","TMUs","Texture_Rate"
+                     ,"VGA_Connection")]
+# Print summary datas
+print(summary(GPU_analyze))

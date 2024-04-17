@@ -1,0 +1,7 @@
+library(stringr)
+install.packages("stringr")
+install.packages("tidyr")
+install.packages("dplyr")
+install.packages("zoo")
+install.packages("Metrics")
+install.packages("caret")
