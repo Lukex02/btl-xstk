@@ -50,21 +50,31 @@ filterColumns <- names(na[na <= 0.25])
 GPUFilter <- GPUAnalyze[, filterColumns]
 # print(summary(GPUFilter))
 
-### No need to adjust column
-# Architecture
-# DVI_Connection
-# HDMI_Connection
+#### No need to adjust column
 # Manufacturer
 # Memory_Type
-# Name
-# Open_GL
-# Power_Connector
-# ROPs
-# Shader
-# TMUs
-# VGA_Connection
 
 ### Column needs to fix
+# Open_GL
+GPUFilter$Open_GL <- NULL
+
+# Power_Connector
+GPUFilter$Power_Connector <- NULL
+
+# Name
+GPUFilter$Name <- NULL
+
+# Architecture
+GPUFilter$Architecture <- NULL
+
+# VGA_Connection
+GPUFilter$VGA_Connection <- NULL
+
+# DVI_Connection
+GPUFilter$DVI_Connection <- NULL
+
+# HDMI_Connection
+GPUFilter$HDMI_Connection <- NULL
 
 # Core_Speed
 GPUFilter$Core_Speed <- as.double(gsub(" MHz", "", GPUFilter$Core_Speed))
@@ -141,4 +151,39 @@ GPUFilter$Texture_Rate <- as.double(gsub(" GTexel/s", "", GPUFilter$Texture_Rate
 # Replace NA with median value
 GPUFilter$Texture_Rate[is.na(GPUFilter$Texture_Rate)] = median(GPUFilter$Texture_Rate, na.rm = T)
 
-print(summary(GPUFilter))
+# ROPs
+# Replace NA with median value
+GPUFilter$ROPs[is.na(GPUFilter$ROPs)] = median(GPUFilter$ROPs, na.rm = T)
+
+# Shader
+# Replace NA with median value
+GPUFilter$Shader[is.na(GPUFilter$Shader)] = median(GPUFilter$Shader, na.rm = T)
+
+# TMUs
+# Replace NA with median value
+GPUFilter$TMUs[is.na(GPUFilter$TMUs)] = median(GPUFilter$TMUs, na.rm = T)
+
+numericalCol = c("Core_Speed",
+                 "Direct_X",
+                 "L2_Cache",
+                 "Max_Power",
+                 "Memory",
+                 "Memory_Bandwidth",
+                 "Memory_Bus",
+                 "Memory_Speed",
+                 "Pixel_Rate",
+                 "Process",
+                 "ROPs",
+                 "Shader",
+                 "TMUs",
+                 "Texture_Rate",)
+nameCol = c("Manufacturer",
+            "Memory_Type",
+            "Resolution_WxH")
+boolCol = c("Dedicated",
+            "Integrated",
+            "Notebook_GPU",
+            "SLI_Crossfire")
+########### Thống kê tả ###########
+
+########### Thống kê suy diễn ###########

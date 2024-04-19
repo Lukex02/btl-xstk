@@ -248,17 +248,14 @@ ggplot(data = CPUFilter, aes(x = Processor_Base_Frequency, y = TDP)) +
   labs(title = "Relationship between number of Base Frequency - TDP",
        x = "Processor Base Frequency",
        y = "TDP")
+
+
 ########### Thống kê suy diễn ###########
 # Anova
 anova <- aov(nb_of_Cores~ Vertical_Segment, data=CPUFilter)
 summary(anova)
 # TukeyHSD(anova)
 plot(TukeyHSD(anova))
-
-# plot(CPUFilter$nb_of_Cores, CPUFilter$T,
-#               xlab="Cores", ylab="Threads",
-#               main="Cores - Threads",
-#               col='blue')
 
 # Hồi quy tuyến tính Base Freq với Cores và TDP
 observerFrame <- data.frame(CPUFilter$Processor_Base_Frequency, CPUFilter$Lithography, CPUFilter$TDP)
