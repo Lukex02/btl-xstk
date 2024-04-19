@@ -13,7 +13,7 @@
 # install.packages("plotly")
 
 # Load packages
-library(stringr)
+# library(stringr)
 # library(tidyr)
 # library(dplyr)
 # library(zoo)
@@ -56,11 +56,10 @@ CPUFilter <- CPUAnalyze[, filterColumns]
 ### Non handling data
 # Vertical_Segment
 # Status
-# nb_of_Cores
 
 ### Data handling
 # Product_Collection
-CPUFilter$Processor_Collection <- NULL
+# CPUFilter$Processor_Collection <- NULL
 
 # Processor_Number
 CPUFilter$Processor_Number <- NULL
@@ -78,6 +77,9 @@ CPUFilter$Recommended_Customer_Price <- as.double(sub("\\$", "", CPUFilter$Recom
 CPUFilter$Recommended_Customer_Price <- as.double(CPUFilter$Recommended_Customer_Price)
 # Replace NA with median value
 CPUFilter$Recommended_Customer_Price[is.na(CPUFilter$Recommended_Customer_Price)] = median(CPUFilter$Recommended_Customer_Price, na.rm = T)
+
+# nb_of_Cores
+CPUFilter$nb_of_Cores[is.na(CPUFilter$nb_of_Cores)] = median(CPUFilter$nb_of_Cores, na.rm = T)
 
 # nb_of_Threads
 CPUFilter$nb_of_Threads[is.na(CPUFilter$nb_of_Threads)] = median(CPUFilter$nb_of_Threads, na.rm = T)
@@ -140,7 +142,8 @@ numericalCol = c("Lithography",
                  "Cache",
                  "TDP",
                  "T")
-nameCol = c("Vertical_Segment")
+nameCol = c("Vertical_Segment",
+            "Product_Collection")
 boolCol = c("Intel_Hyper_Threading_Technology_",
             "Intel_Virtualization_Technology_VTx_",
             "Intel_64_",
@@ -187,3 +190,108 @@ for (i in 1:length(boolCol)) {
       main = boolCol[i],
       col.main = "black")
 }
+# Hệ số tương quan
+corTable <- cor(CPUFilter[numericalCol])
+# Litho - Recommended Price
+# ggplot(data = CPUFilter, aes(x = Lithography, y = Recommended_Customer_Price)) +
+#   geom_point() +
+#   labs(title = "Litho - Recommended Price",
+#        x = "Lithography",
+#        y = "Recommended_Customer_Price")
+
+# Cores - Threads
+ggplot(data = CPUFilter, aes(x = nb_of_Cores, y = nb_of_Threads)) +
+  geom_point() +
+  geom_smooth(method = "gam") +
+  labs(title = "Number of Cores - Threads",
+       x = "number of Cores",
+       y = "number of Threads")
+# Quan sát đồ thị ta có thể thấy 1 core ~ 2 thread (tức dual core) chiếm đa số
+# Phần nhỏ ỏ phía sau là do số nhân của dòng Server (>~60 cores) không có số Threads tương ứng được thay thế bằng median của Threads
+
+# TDP - Cores
+ggplot(data = CPUFilter, aes(x = nb_of_Cores, y = TDP)) +
+  geom_violin() +
+  geom_smooth(method = "lm") +
+  labs(title = "Relationship between number of Cores - TDP",
+       x = "number of Cores",
+       y = "TDP")
+
+# TDP - Threads
+ggplot(data = CPUFilter, aes(x = nb_of_Threads, y = TDP)) +
+  geom_violin() +
+  geom_smooth(method = "lm") +
+  labs(title = "Relationship between number of Threads - TDP",
+       x = "number of Threads",
+       y = "TDP")
+
+# Cache - Cores
+ggplot(data = CPUFilter, aes(x = nb_of_Cores, y = Cache)) +
+  geom_jitter() +
+  geom_smooth(method = "lm") +
+  labs(title = "Relationship between number of Cores - Cache",
+       x = "number of Cores",
+       y = "Cache")
+
+# Cache - Threads
+ggplot(data = CPUFilter, aes(x = nb_of_Threads, y = Cache)) +
+  geom_jitter() +
+  geom_smooth(method = "lm") +
+  labs(title = "Relationship between number of Cores - Cache",
+       x = "number of Threads",
+       y = "Cache")
+
+# Processor Base Freq - TDP
+ggplot(data = CPUFilter, aes(x = Processor_Base_Frequency, y = TDP)) +
+  geom_area() +
+  geom_smooth(method = "lm") +
+  labs(title = "Relationship between number of Base Frequency - TDP",
+       x = "Processor Base Frequency",
+       y = "TDP")
+########### Thống kê suy diễn ###########
+# Anova
+anova <- aov(nb_of_Cores~ Vertical_Segment, data=CPUFilter)
+summary(anova)
+# TukeyHSD(anova)
+plot(TukeyHSD(anova))
+
+# plot(CPUFilter$nb_of_Cores, CPUFilter$T,
+#               xlab="Cores", ylab="Threads",
+#               main="Cores - Threads",
+#               col='blue')
+
+# Hồi quy tuyến tính Base Freq với Cores và TDP
+observerFrame <- data.frame(CPUFilter$Processor_Base_Frequency, CPUFilter$Lithography, CPUFilter$TDP)
+colnames(observerFrame) <- c("Processor_Base_Frequency", "Lithography", "TDP")
+
+trainIndices <- createDataPartition(observerFrame, times = 1, p = 0.7, list = FALSE)
+trainData <- observerFrame[trainIndices, ]  # 70% for train
+testData <- observerFrame[-trainIndices, ]  # 30% for test
+# head(trainData)
+# nrow(testData)
+
+#----Random forest >>> lm (Linear Regression - Hồi quy tuyến tính)----#
+lmModel <- lm(Processor_Base_Frequency~Lithography+TDP, data = trainData)
+# summary(lmModel)
+# predTrain <- predict(lmModel, newdata = trainData)
+# predTest <- predict(lmModel, newdata = testData)
+prediction <- predict(lmModel, newdata = trainData)
+
+
+ggplot(data = observerFrame, aes(x = Lithography, y = TDP)) +
+  geom_point(size = 3) +
+  geom_smooth(method = "lm", color = 'red', formula = y ~ x) +
+  labs(title = "Processor Base Frequency based on Lithography and TDP",
+       x = "Lithography (nm)", y = "TDP (W)",
+       color = "Blue (Ghz)")
+
+MAE <- mean(abs(prediction - testData$Processor_Base_Frequency))
+MSE <- mean((prediction - testData$Processor_Base_Frequency) ^2)
+
+SSR <- sum((prediction - mean(testData$Processor_Base_Frequency)) ^2)
+SST <- sum((testData$Processor_Base_Frequency - mean(testData$Processor_Base_Frequency)) ^2)
+RSquared <- SSR/SST
+
+print(paste("Sai số tuyệt đối trung bình:", MAE))
+print(paste("Sai số toàn phương trung bình:", MSE))
+print(paste("R Bình Phương:", RSquared))
