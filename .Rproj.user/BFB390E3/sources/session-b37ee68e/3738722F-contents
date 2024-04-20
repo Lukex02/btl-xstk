@@ -141,7 +141,8 @@ numericalCol = c("Lithography",
                  "Processor_Base_Frequency",
                  "Cache",
                  "TDP",
-                 "T")
+                 "T"
+                 )
 nameCol = c("Vertical_Segment",
             "Product_Collection")
 boolCol = c("Intel_Hyper_Threading_Technology_",
@@ -192,13 +193,8 @@ for (i in 1:length(boolCol)) {
 }
 # Hệ số tương quan
 corTable <- cor(CPUFilter[numericalCol])
-# Litho - Recommended Price
-# ggplot(data = CPUFilter, aes(x = Lithography, y = Recommended_Customer_Price)) +
-#   geom_point() +
-#   labs(title = "Litho - Recommended Price",
-#        x = "Lithography",
-#        y = "Recommended_Customer_Price")
 
+# Thống kê các cặp
 # Cores - Threads
 ggplot(data = CPUFilter, aes(x = nb_of_Cores, y = nb_of_Threads)) +
   geom_point() +
@@ -248,47 +244,62 @@ ggplot(data = CPUFilter, aes(x = Processor_Base_Frequency, y = TDP)) +
   labs(title = "Relationship between number of Base Frequency - TDP",
        x = "Processor Base Frequency",
        y = "TDP")
-
+##----Vertical_Segment ~ numericalCol----##
+for (i in 1:length(numericalCol)) {
+  print(ggplot(data = CPUFilter, aes(x = Vertical_Segment, y = CPUFilter[,numericalCol[i]])) +
+    geom_boxplot(outlier.colour = "blue", outlier.shape=16, outlier.size=1) +
+      labs(title = paste("Vertical Segment", numericalCol[i]),
+        x = "Vertical Segment",
+        y = numericalCol[i]))
+}
 
 ########### Thống kê suy diễn ###########
-# Anova
+# Anova nb_of_Cores ~ Vertical_Segment
 anova <- aov(nb_of_Cores~ Vertical_Segment, data=CPUFilter)
 summary(anova)
 # TukeyHSD(anova)
 plot(TukeyHSD(anova))
 
-# Hồi quy tuyến tính Base Freq với Cores và TDP
-observerFrame <- data.frame(CPUFilter$Processor_Base_Frequency, CPUFilter$Lithography, CPUFilter$TDP)
-colnames(observerFrame) <- c("Processor_Base_Frequency", "Lithography", "TDP")
+# Hồi quy tuyến tính Giá với Cache và Base Frequency
+observerFrame <- data.frame(CPUFilter$Recommended_Customer_Price, CPUFilter$Cache, CPUFilter$Processor_Base_Frequency)
+colnames(observerFrame) <- c("Recommended_Customer_Price", "Cache", "Processor_Base_Frequency")
 
-trainIndices <- createDataPartition(observerFrame, times = 1, p = 0.7, list = FALSE)
+trainIndices <- createDataPartition(CPUFilter$Recommended_Customer_Price, times = 1, p = 0.8, list = FALSE)
 trainData <- observerFrame[trainIndices, ]  # 70% for train
 testData <- observerFrame[-trainIndices, ]  # 30% for test
 # head(trainData)
 # nrow(testData)
 
 #----Random forest >>> lm (Linear Regression - Hồi quy tuyến tính)----#
-lmModel <- lm(Processor_Base_Frequency~Lithography+TDP, data = trainData)
-# summary(lmModel)
+lmModel <- lm(Recommended_Customer_Price~Cache + Processor_Base_Frequency, data = trainData)
+# lmModel <- lm(TDP ~ Cache + Processor_Base_Frequency, data = trainData)
+summary(lmModel)
+plot(lmModel)
 # predTrain <- predict(lmModel, newdata = trainData)
 # predTest <- predict(lmModel, newdata = testData)
-prediction <- predict(lmModel, newdata = trainData)
+prediction <- predict(lmModel, newdata = testData)
 
-
-ggplot(data = observerFrame, aes(x = Lithography, y = TDP)) +
+ggplot(data = trainData, aes(x = Cache, y = Processor_Base_Frequency)) +
   geom_point(size = 3) +
+  # geom_line(aes(x = Cache, y = prediction)) +
   geom_smooth(method = "lm", color = 'red', formula = y ~ x) +
-  labs(title = "Processor Base Frequency based on Lithography and TDP",
-       x = "Lithography (nm)", y = "TDP (W)",
-       color = "Blue (Ghz)")
+  labs(title = "Train",
+       x = "Cache", y = "Processor_Base_Frequency")
+ggplot(data = testData, aes(x = Cache, y = Processor_Base_Frequency)) +
+  geom_point(size = 3) +
+  # geom_line(aes(x = Cache, y = prediction)) +
+  geom_smooth(method = "lm", color = 'red', formula = y ~ x) +
+  labs(title = "Test",
+       x = "Cache", y = "Processor_Base_Frequency")
 
-MAE <- mean(abs(prediction - testData$Processor_Base_Frequency))
-MSE <- mean((prediction - testData$Processor_Base_Frequency) ^2)
 
-SSR <- sum((prediction - mean(testData$Processor_Base_Frequency)) ^2)
-SST <- sum((testData$Processor_Base_Frequency - mean(testData$Processor_Base_Frequency)) ^2)
-RSquared <- SSR/SST
-
-print(paste("Sai số tuyệt đối trung bình:", MAE))
-print(paste("Sai số toàn phương trung bình:", MSE))
-print(paste("R Bình Phương:", RSquared))
+# MAE <- mean(abs(prediction - testData$Recommended_Customer_Price))
+# MSE <- mean((prediction - testData$Recommended_Customer_Price) ^2)
+# 
+# SSR <- sum((prediction - mean(testData$Recommended_Customer_Price)) ^2)
+# SST <- sum((testData$Recommended_Customer_Price - mean(testData$Recommended_Customer_Price)) ^2)
+# RSquared <- SSR/SST
+# 
+# print(paste("Sai số tuyệt đối trung bình:", MAE))
+# print(paste("Sai số toàn phương trung bình:", MSE))
+# print(paste("R Bình Phương:", RSquared))
