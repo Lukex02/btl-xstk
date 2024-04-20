@@ -13,18 +13,18 @@
 # install.packages("plotly")
 
 # Load packages
-# library(stringr)
-# library(tidyr)
-# library(dplyr)
-# library(zoo)
-# library(Metrics)
-# library(caret)
-# library(MASS)
-# library(ggplot2)
-# library(reshape2)
-# library(mltools)
-# library(DescTools)
-# library(plotly)
+library(stringr)
+library(tidyr)
+library(dplyr)
+library(zoo)
+library(Metrics)
+library(caret)
+library(MASS)
+library(ggplot2)
+library(reshape2)
+library(mltools)
+library(DescTools)
+library(plotly)
 
 # Read datas
 CPU = read.csv("./cpus.csv", header = TRUE, na.strings = c("N/A", ""))
@@ -254,52 +254,87 @@ for (i in 1:length(numericalCol)) {
 }
 
 ########### Thống kê suy diễn ###########
-# Anova nb_of_Cores ~ Vertical_Segment
+# Anova one way nb_of_Cores ~ Vertical_Segment
 anova <- aov(nb_of_Cores~ Vertical_Segment, data=CPUFilter)
 summary(anova)
 # TukeyHSD(anova)
+par(mfrow=c(1,1))
 plot(TukeyHSD(anova))
 
-# Hồi quy tuyến tính Giá với Cache và Base Frequency
-observerFrame <- data.frame(CPUFilter$Recommended_Customer_Price, CPUFilter$Cache, CPUFilter$Processor_Base_Frequency)
-colnames(observerFrame) <- c("Recommended_Customer_Price", "Cache", "Processor_Base_Frequency")
+# Mô hình hồi quy tuyến tính
+# Recommended_Customer_Price ~ Processor_Base_Frequency + Lithography + nb_of_Cores + nb_of_Threads + Cache + TDP + T
+logPrice <- log(CPUFilter$Recommended_Customer_Price)
+logBase <- log(CPUFilter$Processor_Base_Frequency)
+logLith <- log(CPUFilter$Lithography)
+lognbCor <- log(CPUFilter$nb_of_Cores)
+lognbThr <- log(CPUFilter$nb_of_Threads)
+logCache <- log(CPUFilter$Cache)
+logTDP <- log(CPUFilter$TDP)
+logT <- log(CPUFilter$T)
+log
+logDf <- data.frame(logPrice, logBase, logLith, lognbCor, lognbThr, logCache, logTDP, logT)
+colnames(logDf) <- c("Recommended_Customer_Price"
+                     , "Processor_Base_Frequency"
+                     , "Lithography"
+                     , "nb_of_Cores"
+                     , "nb_of_Threads"
+                     , "Cache"
+                     , "TDP"
+                     , "T")
 
-trainIndices <- createDataPartition(CPUFilter$Recommended_Customer_Price, times = 1, p = 0.8, list = FALSE)
-trainData <- observerFrame[trainIndices, ]  # 70% for train
-testData <- observerFrame[-trainIndices, ]  # 30% for test
-# head(trainData)
-# nrow(testData)
+# All in
+lmModel_1 <- lm(Recommended_Customer_Price ~ Processor_Base_Frequency + Lithography + nb_of_Cores + nb_of_Threads + Cache + TDP + T, data = logDf)
+summary(lmModel_1)
+# Chưa thể bác bỏ H0 vì còn T
 
-#----Random forest >>> lm (Linear Regression - Hồi quy tuyến tính)----#
-lmModel <- lm(Recommended_Customer_Price~Cache + Processor_Base_Frequency, data = trainData)
-# lmModel <- lm(TDP ~ Cache + Processor_Base_Frequency, data = trainData)
-summary(lmModel)
-plot(lmModel)
-# predTrain <- predict(lmModel, newdata = trainData)
-# predTest <- predict(lmModel, newdata = testData)
-prediction <- predict(lmModel, newdata = testData)
+# Bỏ T
+lmModel_2 <- lm(Recommended_Customer_Price ~ Processor_Base_Frequency + Lithography + nb_of_Cores + nb_of_Threads + Cache + TDP, data = logDf)
+summary(lmModel_2)
 
-ggplot(data = trainData, aes(x = Cache, y = Processor_Base_Frequency)) +
-  geom_point(size = 3) +
-  # geom_line(aes(x = Cache, y = prediction)) +
-  geom_smooth(method = "lm", color = 'red', formula = y ~ x) +
-  labs(title = "Train",
-       x = "Cache", y = "Processor_Base_Frequency")
-ggplot(data = testData, aes(x = Cache, y = Processor_Base_Frequency)) +
-  geom_point(size = 3) +
-  # geom_line(aes(x = Cache, y = prediction)) +
-  geom_smooth(method = "lm", color = 'red', formula = y ~ x) +
-  labs(title = "Test",
-       x = "Cache", y = "Processor_Base_Frequency")
+# So sánh
+# p <<< 0,5 => Bác bỏ H0 => Ưu tiên nhiều biến
+# P > 0,5 => Ko bác bỏ H0 => Ưu tiêu ít biến
 
+anova(lmModel_1, lmModel_2)
+# Pr > 0.05 => Không thể bác bỏ H0 => Hai mô hình có ý nghĩa thống kê tương đương
+# => Chọn mô hình 2 do ít biến hơn nhưng cùng ý nghĩa thống kê
 
-# MAE <- mean(abs(prediction - testData$Recommended_Customer_Price))
-# MSE <- mean((prediction - testData$Recommended_Customer_Price) ^2)
-# 
-# SSR <- sum((prediction - mean(testData$Recommended_Customer_Price)) ^2)
-# SST <- sum((testData$Recommended_Customer_Price - mean(testData$Recommended_Customer_Price)) ^2)
-# RSquared <- SSR/SST
-# 
-# print(paste("Sai số tuyệt đối trung bình:", MAE))
-# print(paste("Sai số toàn phương trung bình:", MSE))
-# print(paste("R Bình Phương:", RSquared))
+# Đồ thị sai số hồi quy
+par(mfrow=c(2,2))
+plot(lmModel_2,)
+
+# Dự đoán
+observerFrame <- data.frame(logDf[, c("Recommended_Customer_Price"
+                                      , "Processor_Base_Frequency"
+                                      , "Lithography"
+                                      , "nb_of_Cores"
+                                      , "nb_of_Threads"
+                                      , "Cache"
+                                      , "TDP"
+                                      , "T")])
+
+trainIndices <- createDataPartition(observerFrame$Recommended_Customer_Price, times = 1, p = 0.8, list = FALSE)
+trainData <- observerFrame[trainIndices, ]  # 80% for train
+testData <- observerFrame[-trainIndices, ]  # 20% for test
+
+prediction <- predict(lmModel_1, interval = "confidence")
+print(colMeans(prediction))
+
+predictedPrice <- predict(lmModel_1) # log(Price)
+predictData <- data.frame(Recommended_Customer_Price = logDf$Recommended_Customer_Price, prediction = predictedPrice)
+
+ggplot(predictData, aes(x = Recommended_Customer_Price, y = prediction)) +
+  geom_point() +
+  geom_smooth(method = "lm", color = "blue") +
+  labs(x = "Recommended Customer Price", y = "Predicted Price", title = "Prediction of Recommended Customer Price")
+
+MAE <- mean(abs(predictedPrice -logDf$Recommended_Customer_Price))
+MSE <- mean((predictedPrice - logDf$Recommended_Customer_Price) ^2)
+
+SSR <- sum((predictedPrice - mean(logDf$Recommended_Customer_Price)) ^2)
+SST <- sum((logDf$Recommended_Customer_Price - mean(logDf$Recommended_Customer_Price)) ^2)
+RSquared <- SSR/SST
+
+print(paste("Sai số tuyệt đối trung bình:", MAE))
+print(paste("Sai số toàn phương trung bình:", MSE))
+print(paste("R Bình Phương:", RSquared))
