@@ -1,6 +1,6 @@
 # btl-xstk
 
-Link bài báo cáo: https://www.overleaf.com/project/661a240ef629dad112c9938c.
+Link bài báo cáo: https://www.overleaf.com/3138449462pxnqncwfkkfy#c99344.
 
 ### KHÔNG commit lên main branch, tạo 1 branch khác pull request và ghi rõ update thêm gì
 
