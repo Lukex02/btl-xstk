@@ -13,18 +13,18 @@
 # install.packages("plotly")
 
 # Load packages
-# library(stringr)
-# library(tidyr)
-# library(dplyr)
-# library(zoo)
-# library(Metrics)
-# library(caret)
-# library(MASS)
-# library(ggplot2)
-# library(reshape2)
-# library(mltools)
-# library(DescTools)
-# library(plotly)
+library(stringr)
+library(tidyr)
+library(dplyr)
+library(zoo)
+library(Metrics)
+library(caret)
+library(MASS)
+library(ggplot2)
+library(reshape2)
+library(mltools)
+library(DescTools)
+library(plotly)
 
 # Read datas
 GPU = read.csv("./gpus.csv", header = TRUE, na.strings = c("N/A"))
@@ -423,6 +423,7 @@ testData <- observerFrame[-trainIndices, ]  # 20% for test
 
 prediction <- predict(lmModel_1, interval = "confidence")
 print(colMeans(prediction)) # Log(Core Speed)
+print(exp(colMeans(prediction))) # Dự đoán trên mean của bộ dữ liệu chuyển từ log
 
 predictedCoreSpd <- predict(lmModel_1)
 predictData <- data.frame(Core_Speed = logDf$Core_Speed, prediction = predictedCoreSpd)

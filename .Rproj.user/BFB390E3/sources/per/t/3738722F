@@ -3,7 +3,7 @@
     "path": "F:/Bách Khoa/Năm 2/XSTK/BTL/btl-xstk/cpu.R",
     "project_path": "cpu.R",
     "type": "r_source",
-    "hash": "2223499780",
+    "hash": "1124015446",
     "contents": "",
     "dirty": false,
     "created": 1713541983849.0,
@@ -13,15 +13,15 @@
         "tempName": "Untitled1",
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "329,0",
-        "scrollLine": "312"
+        "cursorPosition": "262,0",
+        "scrollLine": "245"
     },
     "folds": "",
-    "lastKnownWriteTime": 1713623830,
+    "lastKnownWriteTime": 1713668259,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1713623830309,
+    "last_content_update": 1713668259415,
     "read_only": false,
     "read_only_alternatives": []
 }

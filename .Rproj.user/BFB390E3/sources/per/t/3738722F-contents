@@ -318,7 +318,8 @@ trainData <- observerFrame[trainIndices, ]  # 80% for train
 testData <- observerFrame[-trainIndices, ]  # 20% for test
 
 prediction <- predict(lmModel_1, interval = "confidence")
-print(colMeans(prediction))
+print(colMeans(prediction)) # Log(Price)
+print(exp(colMeans(prediction))) # Dự đoán trên mean của bộ dữ liệu chuyển từ log
 
 predictedPrice <- predict(lmModel_1) # log(Price)
 predictData <- data.frame(Recommended_Customer_Price = logDf$Recommended_Customer_Price, prediction = predictedPrice)
