@@ -161,11 +161,12 @@ numMax <- apply(CPUFilter[,numericalCol], 2, max)
 
 summaryNumeric <- data.frame(numCount, numMean, numMedian, numSd, numMin, numMax)
 colnames(summaryNumeric) <- c("Count", "Mean", "Median", "Sd", "Min", "Max")
+print(summaryNumeric)
 
 for (i in 1:length(numericalCol)) {
   histData <- CPUFilter[[numericalCol[i]]]
   hist(histData,
-       main = paste("Histogram of", names(CPUFilter)[which(names(CPUFilter)==numericalCol[i])]),
+       main = paste("Histogram of", names(CPUFilter)[which(names(SCPUFilter)==numericalCol[i])]),
        labels = TRUE,
        col = "darkmagenta",
        xlab = names(CPUFilter)[which(names(CPUFilter)==numericalCol[i])],
@@ -312,10 +313,6 @@ observerFrame <- data.frame(logDf[, c("Recommended_Customer_Price"
                                       , "Cache"
                                       , "TDP"
                                       , "T")])
-
-trainIndices <- createDataPartition(observerFrame$Recommended_Customer_Price, times = 1, p = 0.8, list = FALSE)
-trainData <- observerFrame[trainIndices, ]  # 80% for train
-testData <- observerFrame[-trainIndices, ]  # 20% for test
 
 prediction <- predict(lmModel_1, interval = "confidence")
 print(colMeans(prediction)) # Log(Price)

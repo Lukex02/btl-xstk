@@ -96,9 +96,7 @@ GPUFilter$L2_Cache <- as.double(gsub("KB", "", GPUFilter$L2_Cache))
 GPUFilter$L2_Cache[is.na(GPUFilter$L2_Cache)] = median(GPUFilter$L2_Cache, na.rm = T)
 
 # Direct_X
-GPUFilter$Direct_X <- as.double(gsub("DX ", "", GPUFilter$Direct_X))
-# Replace NA with median value
-GPUFilter$Direct_X[is.na(GPUFilter$Direct_X)] = median(GPUFilter$Direct_X, na.rm = T)
+GPUFilter$Direct_X <- NULL
 
 # Max_Power
 GPUFilter$Max_Power <- as.double(gsub(" Watts", "", GPUFilter$Max_Power))
@@ -169,7 +167,6 @@ GPUFilter$TMUs[is.na(GPUFilter$TMUs)] = median(GPUFilter$TMUs, na.rm = T)
 
 # print(summary(GPUFilter))
 numericalCol = c("Core_Speed",
-                 "Direct_X",
                  "L2_Cache",
                  "Max_Power",
                  "Memory",
@@ -181,7 +178,6 @@ numericalCol = c("Core_Speed",
                  "Shader",
                  "TMUs",
                  "Texture_Rate")
-                 # "ROPs",
 nameCol = c("Manufacturer",
             "Memory_Type",
             "Resolution_WxH")
@@ -201,8 +197,9 @@ numMax <- apply(GPUFilter[,numericalCol], 2, max)
 
 summaryNumeric <- data.frame(numCount, numMean, numMedian, numSd, numMin, numMax)
 colnames(summaryNumeric) <- c("Count", "Mean", "Median", "Sd", "Min", "Max")
+print(summaryNumeric)
 
-
+par(mfrow=c(2,2))
 for (i in 1:length(numericalCol)) {
   histData <- GPUFilter[[numericalCol[i]]]
   hist(histData,
@@ -211,26 +208,6 @@ for (i in 1:length(numericalCol)) {
        col = "darkgreen",
        xlab = names(GPUFilter)[which(names(GPUFilter)==numericalCol[i])],
        breaks = 10)
-}
-# Thống kê dữ liệu tên/mã hiệu
-for (i in 1:length(nameCol)) {
-  barData <- table(GPUFilter[[nameCol[i]]])
-  barplot(barData,
-          xlab = names(GPUFilter)[which(names(GPUFilter) == nameCol[i])],
-          ylab = "Frequency",
-          main = paste("Barplot of", names(GPUFilter)[which(names(GPUFilter)==nameCol[i])]),
-  )
-}
-# Thống kê dữ liệu bool
-for (i in 1:length(boolCol)) {
-  pieData <- table(GPUFilter[[boolCol[i]]])
-  # pieData <- c(pieData[[1]], pieData[[2]])
-  # print(c(pieData[[1]], pieData[[2]]))
-  pie(pieData, col = c("red", "green"),
-      labels = names(pieData),
-      radius = -1,
-      main = boolCol[i],
-      col.main = "black")
 }
 
 # Hệ số tương quan
@@ -301,75 +278,7 @@ ggplot(data = GPUFilter, aes(x = Pixel_Rate, y = Texture_Rate)) +
        x = "Pixel Rate",
        y = "Texture Rate")
 
-##----Manufacturer ~ Core_Speed + Texture_Rate + Pixel_Rate + Max_Power----##
-# ~ Core_Speed
-ggplot(data = GPUFilter, aes(x = Manufacturer, y = Core_Speed)) +
-  geom_boxplot(outlier.colour = "red", outlier.shape=16, outlier.size=1) +
-  labs(title = "Manufacturer - Core Speed",
-       x = "Manufacturer",
-       y = "Core Speed")
-# ~ Texture_Rate
-ggplot(data = GPUFilter, aes(x = Manufacturer, y = Texture_Rate)) +
-  geom_boxplot(outlier.colour = "red", outlier.shape=16, outlier.size=1) +
-  labs(title = "Manufacturer - Texture Rate",
-       x = "Manufacturer",
-       y = "Texture Rate")
-# ~ Pixel_Rate
-ggplot(data = GPUFilter, aes(x = Manufacturer, y = Pixel_Rate)) +
-  geom_boxplot(outlier.colour = "red", outlier.shape=16, outlier.size=1) +
-  labs(title = "Manufacturer - Pixel Rate",
-       x = "Manufacturer",
-       y = "Pixel Rate")
-# ~ Max_Power
-ggplot(data = GPUFilter, aes(x = Manufacturer, y = Max_Power)) +
-  geom_boxplot(outlier.colour = "red", outlier.shape=16, outlier.size=1) +
-  labs(title = "Manufacturer - Max Power",
-       x = "Manufacturer",
-       y = "Max Power")
-
-##----Memory_Type ~ Memory + Memory_Bandwidth + Memory_Bus + Memory_Speed----##
-# ~ Memory
-ggplot(data = GPUFilter, aes(x = Memory_Type, y = Memory)) +
-  geom_boxplot(outlier.colour = "blue", outlier.shape=16, outlier.size=1) +
-  labs(title = "Memory_Type - Memory",
-       x = "Memory Type",
-       y = "Memory")
-# ~ Memory_Bandwidth
-ggplot(data = GPUFilter, aes(x = Memory_Type, y = Texture_Rate)) +
-  geom_boxplot(outlier.colour = "blue", outlier.shape=16, outlier.size=1) +
-  labs(title = "Memory_Type - Memory Bandwidth",
-       x = "Memory Type",
-       y = "Memory Bandwidth")
-# ~ Memory_Bus
-ggplot(data = GPUFilter, aes(x = Memory_Type, y = Memory_Bus)) +
-  geom_boxplot(outlier.colour = "blue", outlier.shape=16, outlier.size=1) +
-  labs(title = "Memory_Type - Memory Bus",
-       x = "Memory Type",
-       y = "Memory Bus")
-# ~ Memory_Speed
-ggplot(data = GPUFilter, aes(x = Memory_Type, y = Memory_Speed)) +
-  geom_boxplot(outlier.colour = "blue", outlier.shape=16, outlier.size=1) +
-  labs(title = "Memory_Type - Memory Speed",
-       x = "Memory Type",
-       y = "Memory Speed")
-
 ########### Thống kê suy diễn ###########
-# # Anova ở Core_Speed ~ Manufacturer
-# manuAnova <- aov(data = GPUFilter, Core_Speed ~ Manufacturer)
-# # summary(manuAnova)
-# TukeyHSD(manuAnova)
-# plot(TukeyHSD(manuAnova))
-# 
-# # Anova ở Memory ~ Memory_Type
-# memAnova <- aov(data = GPUFilter, Memory ~ Memory_Type)
-# TukeyHSD(memAnova)
-# plot(TukeyHSD(memAnova))
-# 
-# # Anova ở Memory_Speed ~ Memory_Type
-# memSpdAnova <- aov(data = GPUFilter, Memory_Speed ~ Memory_Type)
-# TukeyHSD(memSpdAnova)
-# plot(TukeyHSD(memSpdAnova))
-
 # Mô hình hồi quy tuyến tính
 # Core Speed ~ Memory_Speed + Memory + Memory_Bandwidth + Memory_Bus + Texture_Rate + Pixel_Rate + TMUs
 logCoreSpd <- log(GPUFilter$Core_Speed)
@@ -392,21 +301,16 @@ colnames(logDf) <- c("Core_Speed"
                      , "TMUs")
 
 # All in
-lmModel_1 <- lm(Core_Speed ~ Memory_Speed + Memory + Memory_Bandwidth + Memory_Bus + Texture_Rate + Pixel_Rate + TMUs, data = logDf)
+lmModel_1 <- lm(Core_Speed ~ Memory_Speed + Memory + Memory_Bandwidth + Memory_Bus 
+                + Texture_Rate + Pixel_Rate + TMUs, data = logDf)
 summary(lmModel_1)
-# Chưa thể bác bỏ H0 vì còn Memory_Bandwidth
 
 # Bỏ Memory_Bandwidth
-lmModel_2 <- lm(Core_Speed ~ Memory_Speed + Memory + Memory_Bus + Texture_Rate + Pixel_Rate + TMUs, data = logDf)
+lmModel_2 <- lm(Core_Speed ~ Memory_Speed + Memory + Memory_Bus
+                + Texture_Rate + Pixel_Rate + TMUs, data = logDf)
 summary(lmModel_2)
 
-# So sánh
-# p <<< 0,5 => Bác bỏ H0 => Ưu tiên nhiều biến
-# P > 0,5 => Ko bác bỏ H0 => Ưu tiêu ít biến
-
 anova(lmModel_1, lmModel_2)
-# Pr > 0.05 => Không thể bác bỏ H0 => Hai mô hình có ý nghĩa thống kê tương đương
-# => Chọn mô hình 2 do ít biến hơn nhưng cùng ý nghĩa thống kê
 
 # Đồ thị sai số hồi quy
 par(mfrow=c(2,2))
@@ -416,10 +320,6 @@ plot(lmModel_2,)
 observerFrame <- data.frame(logDf[, c("Core_Speed", "Memory_Speed", "Memory"
                                       , "Memory_Bandwidth", "Memory_Bus"
                                       , "Texture_Rate", "Pixel_Rate", "TMUs")])
-
-trainIndices <- createDataPartition(observerFrame$Core_Speed, times = 1, p = 0.8, list = FALSE)
-trainData <- observerFrame[trainIndices, ]  # 80% for train
-testData <- observerFrame[-trainIndices, ]  # 20% for test
 
 prediction <- predict(lmModel_1, interval = "confidence")
 print(colMeans(prediction)) # Log(Core Speed)
